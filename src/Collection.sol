@@ -96,11 +96,9 @@ contract Collection is ERC721URIStorage, Ownable {
      * Override function
      */
     function _beforeTokenTransfer( address from, address to, uint256 tokenId ) internal virtual override {
-        require(
-            isSBT == true && // FOR SBT
-            (from == address(0) || from == address(this)),
-            "SBTCollection: only allow first mint" 
-        );
+        if (isSBT) {
+            require(from == address(0) || from == address(this), "SBTCollection: only allow first mint");
+        }
         super._beforeTokenTransfer(from, to, tokenId);
     }
 }
