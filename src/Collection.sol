@@ -4,10 +4,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./SBT.sol";
 
-// import "./interfaces/IERC5192.sol"; // TODO: Add SBT SUPPORT 09-21-2022
-
-contract Collection is ERC721URIStorage, Ownable {
+contract Collection is ERC721URIStorage, Ownable, SBT {
     using Counters for Counters.Counter;
     Counters.Counter public counters;
 
@@ -34,7 +33,11 @@ contract Collection is ERC721URIStorage, Ownable {
         transferOwnership(_manager);
     }
 
-    function mint(string memory _tokenMetadata) public onlyOwner returns (uint256) {
+    function mint(string memory _tokenMetadata)
+        public
+        onlyOwner
+        returns (uint256)
+    {
         uint256 newTokenId = counters.current();
         _mint(address(this), newTokenId);
         _setTokenURI(newTokenId, _tokenMetadata);
@@ -48,29 +51,41 @@ contract Collection is ERC721URIStorage, Ownable {
         emit Burned(_tokenId);
     }
 
-    function transferTokenFromCollectionToUserAddress(uint256 _tokenId, address _user) public onlyOwner {
+    function transferTokenFromCollectionToUserAddress(
+        uint256 _tokenId,
+        address _user
+    ) public onlyOwner {
         require(
             _user != address(0) && _user != address(this),
             "Collection: Please make sure the user address is correct."
         );
         _transfer(address(this), _user, _tokenId);
-        emit TransferToUserFromCollection(_tokenId,_user);
+        emit TransferToUserFromCollection(_tokenId, _user);
     }
 
     // SET Token's metadata (by Token ID)
-    function setTokenMetadata(uint256 _tokenId, string memory _tokenMetadata) public onlyOwner {
+    function setTokenMetadata(uint256 _tokenId, string memory _tokenMetadata)
+        public
+        onlyOwner
+    {
         _setTokenURI(_tokenId, _tokenMetadata);
         emit TokenMeatadataUpdated(_tokenId, _tokenMetadata);
     }
 
     // SET Collection's metadata
-    function setCollectionMetadata(string memory _collectionMetadata) public onlyOwner {
+    function setCollectionMetadata(string memory _collectionMetadata)
+        public
+        onlyOwner
+    {
         metadata = _collectionMetadata;
         // emit CollectionMetadataUpdated(_collectionMetadata);
     }
 
     // SET Base URI for token  metadata: for the full metadata URL
-    function setCollectionBaseURI(string memory _baseURIForMetadata) public onlyOwner {
+    function setCollectionBaseURI(string memory _baseURIForMetadata)
+        public
+        onlyOwner
+    {
         baseURIForMetadata = _baseURIForMetadata;
     }
 
@@ -87,6 +102,21 @@ contract Collection is ERC721URIStorage, Ownable {
         return counters.current();
     }
 
+    // FOR SBT IERC5192.locked function returns
+    function _locked(uint256 tokenId)
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        if (isSBT) {
+            return isSBT;
+        } else {
+            return _tokenIsBound[tokenId];
+        }
+    }
+
     // For ERC721URIStorage get full metadata URI
     function _baseURI() internal view virtual override returns (string memory) {
         return baseURIForMetadata;
@@ -95,9 +125,21 @@ contract Collection is ERC721URIStorage, Ownable {
     /**
      * Override function
      */
-    function _beforeTokenTransfer( address from, address to, uint256 tokenId ) internal virtual override {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal virtual override {
         if (isSBT) {
-            require(from == address(0) || from == address(this), "SBTCollection: only allow first mint");
+            require(
+                from == address(0) || from == address(this),
+                "SBTCollection: only allow first mint."
+            );
+        } else {
+            require(
+                _tokenIsBound[tokenId] == false,
+                "SBTCollection: SBT cannot transfer."
+            );
         }
         super._beforeTokenTransfer(from, to, tokenId);
     }
