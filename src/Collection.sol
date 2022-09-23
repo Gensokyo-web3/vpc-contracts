@@ -13,6 +13,7 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
     // isSBT will make the entire NFT in the collection non-transferable.
     // to control the independent tokenId, please use the function "setTokenIsSBT".
     bool public isSBT = false;
+    bool public isAllowUserBurnToken = false;
 
     string public metadata;
     string public baseURIForMetadata;
@@ -58,14 +59,32 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         return newTokenId;
     }
 
-    function burn(uint256 _tokenId) public onlyOwner {
-        require(
-            locked(_tokenId) == false,
-            "Collection: SBT cannot be burned."
-        );
+    function burn(uint256 _tokenId) public {
+        // NOT ONLYOWNER !
+        require(locked(_tokenId) == false, "Collection: SBT cannot be burned.");
 
-        _burn(_tokenId);
-        emit Burned(_tokenId);
+        if (owner() == msg.sender) {
+            // is Collection owner
+            _burn(_tokenId);
+            emit Burned(_tokenId);
+            return;
+        } else {
+            // is not Collection owner
+            // allow user burn
+            require(
+                isAllowUserBurnToken,
+                "Collection: token is not allowed to burned"
+            );
+
+            require(
+                ownerOf(_tokenId) == _msgSender(),
+                "Collection: The caller is not the owner of the Token."
+            );
+
+            _burn(_tokenId);
+            emit Burned(_tokenId);
+            return;
+        }
     }
 
     function transferTokenFromCollectionToUserAddress(
