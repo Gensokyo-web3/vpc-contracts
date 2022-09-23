@@ -73,7 +73,7 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
             // allow user burn
             require(
                 isAllowUserBurnToken,
-                "Collection: token is not allowed to burned"
+                "Collection: token is not allowed to burned."
             );
 
             require(
