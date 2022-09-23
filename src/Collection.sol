@@ -87,6 +87,15 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         }
     }
 
+    // SET the status of allowing users to burn his own token.
+    function setCollectionIsAllowUserToBurnHisOwnToken(bool _allowBurnStatus)
+        public
+        onlyOwner
+    {
+        isAllowUserBurnToken = _allowBurnStatus;
+    }
+
+    // Transfer from COLLECTION to user.
     function transferTokenFromCollectionToUserAddress(
         uint256 _tokenId,
         address _user
