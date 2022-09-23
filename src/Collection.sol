@@ -47,6 +47,11 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
     }
 
     function burn(uint256 _tokenId) public onlyOwner {
+        require(
+            locked(_tokenId) == false,
+            "Collection: SBT cannot be burned."
+        );
+
         _burn(_tokenId);
         emit Burned(_tokenId);
     }
