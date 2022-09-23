@@ -106,15 +106,25 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         baseURIForMetadata = _baseURIForMetadata;
     }
 
-    // SET SBT status
+    // SET SBT status for COLLECTION
     function setCollectionIsSBT(bool _SBTStatus) public onlyOwner {
         isSBT = _SBTStatus;
         // emit CollectionIsSBTStatusUpdated(isSBT);
     }
 
-    /**
-     * PUBLIC QUERY FEATURES
-     */
+    // SET SBT status for Token ()
+    function setTokenIsSBT(bool _tokenIdIsSBT, uint256 _tokenId)
+        public
+        onlyOwner
+    {
+        if (_tokenIdIsSBT) {
+            _lockToken(_tokenId);
+        } else {
+            _unlockToken(_tokenId);
+        }
+    }
+
+    // PUBLIC QUERY FEATURES
     function totalSupply() public view returns (uint256) {
         return counters.current();
     }
