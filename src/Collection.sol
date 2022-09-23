@@ -40,6 +40,16 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         onlyOwner
         returns (uint256)
     {
+        require(
+            bytes(metadata).length > 0,
+            "Collection: Please check the collection's metadata."
+        );
+
+        require(
+            bytes(_tokenMetadata).length > 0,
+            "Collection: Invalid Metadata."
+        );
+
         uint256 newTokenId = counters.current();
         _mint(address(this), newTokenId);
         _setTokenURI(newTokenId, _tokenMetadata);
