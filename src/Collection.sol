@@ -129,7 +129,10 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         return counters.current();
     }
 
-    // FOR SBT IERC5192.locked function returns
+    // FOR SBT IERC5192.locked function returns.
+    // GET tokenId -> token's lock status.
+    // "isSBT" hiegh level.
+    // "tokenId => lockStatus" is low level.
     function _locked(uint256 tokenId)
         internal
         view
