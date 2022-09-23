@@ -63,5 +63,16 @@ contract CollectionTest is Test {
         // set collection metadata correct & Mint a new token by manager.
         vm.prank(manager);
         uint256 mintedTokenId = collection.mint(correctMetadata);
+        assertEq(mintedTokenId, 0);
+        // check metadata (token URI) of token.
+        string memory tokenURIofMintedToken = collection.tokenURI(
+            mintedTokenId
+        );
+        assertEq(bytes(tokenURIofMintedToken), bytes(correctMetadata));
+    }
+
+    function _mintATokenByManager() internal returns (uint256) {
+        vm.prank(manager);
+        return collection.mint("hello");
     }
 }
