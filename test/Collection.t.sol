@@ -1,0 +1,67 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "forge-std/Test.sol";
+import "../src/Collection.sol";
+
+contract CollectionTest is Test {
+    Collection public collection;
+
+    string public collectionName = "name";
+    string public collectionSymbol = "symbol";
+
+    address public manager = address(0xaa);
+
+    function setUp() public {
+        collection = new Collection(collectionName, collectionSymbol, manager);
+        vm.prank(manager);
+        collection.setCollectionMetadata("ipfs://defaultCollectionMetadata");
+    }
+
+    function testOwnerPermissions() public {
+        string memory newCollectionMetadata = "ipfs://newCollectionMetadata";
+        vm.prank(manager);
+        collection.setCollectionMetadata(newCollectionMetadata);
+        assertEq(bytes(newCollectionMetadata), bytes(collection.metadata()));
+    }
+
+    function testByIllegalOwnerPermissions(address _fakeManager) public {
+        vm.expectRevert("Ownable: caller is not the owner");
+        vm.prank(address(_fakeManager)); // Will revert:"Ownable: caller is not the owner"
+        collection.setCollectionMetadata("IllegalSettings");
+    }
+
+    function testMintToken(address _fakeManager) public {
+        string memory correctMetadata = "ipfs://someCorrectTokenMetadata";
+
+        // STEP 0
+        // Mint by illega user.
+        vm.prank(address(_fakeManager));
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.mint(correctMetadata);
+
+        // STEP 1
+        // set collection metadata as NULL (not correct) & Mint by manager.
+        vm.prank(manager);
+        collection.setCollectionMetadata("");
+        assertEq(bytes(""), bytes(collection.metadata()));
+
+        vm.prank(manager);
+        vm.expectRevert("Collection: Please check the collection's metadata.");
+        collection.mint(correctMetadata);
+
+        // STEP 2
+        // set collection metadata correct & Mint a NULL token by manager.
+        vm.prank(manager);
+        collection.setCollectionMetadata(correctMetadata);
+
+        vm.prank(manager);
+        vm.expectRevert("Collection: Invalid Metadata.");
+        collection.mint("");
+
+        // STEP 3
+        // set collection metadata correct & Mint a new token by manager.
+        vm.prank(manager);
+        uint256 mintedTokenId = collection.mint(correctMetadata);
+    }
+}
