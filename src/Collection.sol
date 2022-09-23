@@ -10,6 +10,8 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
     using Counters for Counters.Counter;
     Counters.Counter public counters;
 
+    // isSBT will make the entire NFT in the collection non-transferable.
+    // to control the independent tokenId, please use the function "setTokenIsSBT".
     bool public isSBT = false;
 
     string public metadata;
