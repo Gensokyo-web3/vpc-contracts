@@ -113,8 +113,11 @@ contract CollectionTest is Test {
         // Burn token by ILLEGA user.
         mintedTokenId = _mintATokenByManager();
         assertEq(mintedTokenId, 2);
+
         vm.prank(manager);
         collection.setCollectionIsAllowUserToBurnHisOwnToken(true);
+        assertEq(collection.isAllowUserBurnToken(), true);
+
         vm.prank(_illegaUser);
         vm.expectRevert(
             "Collection: The caller is not the owner of the Token."
@@ -135,5 +138,16 @@ contract CollectionTest is Test {
         // burn token by user.
         vm.prank(_normalUser);
         collection.burn(mintedTokenId);
+    }
+
+    function testAllowUserBurnHisOwnToken(bool _allowBurnStatus) public {
+        // by illegal user.
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.setCollectionIsAllowUserToBurnHisOwnToken(_allowBurnStatus);
+
+        // by manager.
+        vm.prank(manager);
+        collection.setCollectionIsAllowUserToBurnHisOwnToken(_allowBurnStatus);
+        assertEq(collection.isAllowUserBurnToken(), _allowBurnStatus);
     }
 }
