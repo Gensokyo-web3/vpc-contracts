@@ -10,6 +10,8 @@ contract CollectionTest is Test {
     string public collectionName = "name";
     string public collectionSymbol = "symbol";
 
+    string public correctMetadata = "ipfs://someCorrectTokenMetadata";
+
     address public manager = address(0xaa);
 
     function setUp() public {
@@ -33,16 +35,13 @@ contract CollectionTest is Test {
     }
 
     function testMintTokenByIllegaUser(address _fakeManager) public {
-        string memory correctMetadata = "ipfs://someCorrectTokenMetadata";
         if (_fakeManager == manager) return;
         vm.prank(_fakeManager);
         vm.expectRevert("Ownable: caller is not the owner");
         collection.mint(correctMetadata);
     }
 
-    function testMintToken() public {
-        string memory correctMetadata = "ipfs://someCorrectTokenMetadata";
-        // STEP 1
+    function testMintTokenByManagerNullMeta() public {
         // set collection metadata as NULL (not correct) & Mint by manager.
         vm.prank(manager);
         collection.setCollectionMetadata("");
@@ -51,8 +50,9 @@ contract CollectionTest is Test {
         vm.prank(manager);
         vm.expectRevert("Collection: Please check the collection's metadata.");
         collection.mint(correctMetadata);
+    }
 
-        // STEP 2
+    function testMintNullTokenByManager() public {
         // set collection metadata correct & Mint a NULL token by manager.
         vm.prank(manager);
         collection.setCollectionMetadata(correctMetadata);
@@ -60,8 +60,9 @@ contract CollectionTest is Test {
         vm.prank(manager);
         vm.expectRevert("Collection: Invalid Metadata.");
         collection.mint("");
+    }
 
-        // STEP 3
+    function testMintNewToken() public {
         // set collection metadata correct & Mint a new token by manager.
         vm.prank(manager);
         uint256 mintedTokenId = collection.mint(correctMetadata);
