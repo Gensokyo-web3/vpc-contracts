@@ -25,21 +25,23 @@ contract CollectionTest is Test {
         assertEq(bytes(newCollectionMetadata), bytes(collection.metadata()));
     }
 
-    function testByIllegalOwnerPermissions(address _fakeManager) public {
+    function testPermissionsByIllegalOwner(address _fakeManager) public {
+        if (_fakeManager == manager) return;
+        vm.prank(_fakeManager);
         vm.expectRevert("Ownable: caller is not the owner");
-        vm.prank(address(_fakeManager)); // Will revert:"Ownable: caller is not the owner"
         collection.setCollectionMetadata("IllegalSettings");
     }
 
-    function testMintToken(address _fakeManager) public {
+    function testMintTokenByIllegaUser(address _fakeManager) public {
         string memory correctMetadata = "ipfs://someCorrectTokenMetadata";
-
-        // STEP 0
-        // Mint by illega user.
-        vm.prank(address(_fakeManager));
+        if (_fakeManager == manager) return;
+        vm.prank(_fakeManager);
         vm.expectRevert("Ownable: caller is not the owner");
         collection.mint(correctMetadata);
+    }
 
+    function testMintToken() public {
+        string memory correctMetadata = "ipfs://someCorrectTokenMetadata";
         // STEP 1
         // set collection metadata as NULL (not correct) & Mint by manager.
         vm.prank(manager);
