@@ -75,6 +75,64 @@ contract CollectionTest is Test {
 
     function _mintATokenByManager() internal returns (uint256) {
         vm.prank(manager);
-        return collection.mint("hello");
+        uint256 mintedTokenId = collection.mint("hello");
+        uint256 currentTokenId = collection.totalSupply();
+        assertEq(mintedTokenId, currentTokenId - 1);
+        return mintedTokenId;
+    }
+
+    function testBurnToken(address _illegaUser, address _normalUser) public {
+        if (
+            _illegaUser == address(collection) ||
+            _illegaUser == manager ||
+            _illegaUser == _normalUser ||
+            _normalUser == address(collection) ||
+            _normalUser == address(0x0)
+        ) return;
+
+        // isAllowUserBurnToken = false
+        // Try to burn token by Manager
+        uint256 mintedTokenId = _mintATokenByManager();
+        assertEq(mintedTokenId, 0);
+        vm.prank(manager);
+        collection.burn(mintedTokenId);
+        // Try to get burned Token.
+        vm.expectRevert("ERC721: invalid token ID");
+        collection.ownerOf(mintedTokenId);
+
+        // isAllowUserBurnToken = false
+        // Try to burn token by ILLEGA user.
+        mintedTokenId = _mintATokenByManager();
+        assertEq(mintedTokenId, 1);
+        vm.prank(_illegaUser);
+        vm.expectRevert("Collection: token is not allowed to burned.");
+        collection.burn(mintedTokenId);
+
+        // isAllowUserBurnToken = true
+        // Burn token by ILLEGA user.
+        mintedTokenId = _mintATokenByManager();
+        assertEq(mintedTokenId, 2);
+        vm.prank(manager);
+        collection.setCollectionIsAllowUserToBurnHisOwnToken(true);
+        vm.prank(_illegaUser);
+        vm.expectRevert(
+            "Collection: The caller is not the owner of the Token."
+        );
+        collection.burn(mintedTokenId);
+        address mintedTokenOwner = collection.ownerOf(mintedTokenId);
+        assertEq(address(collection), mintedTokenOwner);
+
+        // isAllowUserBurnToken = true
+        // Burn token by normal user.
+        // transfer Token from collection to users.
+        mintedTokenId = _mintATokenByManager();
+        vm.prank(manager);
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _normalUser
+        );
+        // burn token by user.
+        vm.prank(_normalUser);
+        collection.burn(mintedTokenId);
     }
 }
