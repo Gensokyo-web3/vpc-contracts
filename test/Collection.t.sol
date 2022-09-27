@@ -219,4 +219,15 @@ contract CollectionTest is Test {
             _targetUser
         );
     }
+
+    function testEnableCollectionSBTState(bool _SBTState) public {
+        vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionIsSBTStatusUpdated(_SBTState);
+        collection.setCollectionIsSBT(_SBTState);
+
+        // set SBT state by illegal user.
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.setCollectionIsSBT(!_SBTState);
+    }
 }
