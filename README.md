@@ -2,7 +2,7 @@
 
 📜 Collection contracts (ERC721 based) "Verifiable Permanent Certification".   
   
-| Our vision is to leverage ETH NFT technology + IPFS to keep meaningful data alive for longer.
+> Our vision is to leverage ETH NFT technology + IPFS to keep meaningful data alive for longer.
 
 ## DEV && TEST
 
