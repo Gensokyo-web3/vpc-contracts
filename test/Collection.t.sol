@@ -230,4 +230,29 @@ contract CollectionTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         collection.setCollectionIsSBT(!_SBTState);
     }
+
+    function testMintAndTransferOutFromCollectionWhenGlobalSBTStateIsEnabled(
+        address _userAddress
+    ) public {
+        // mint & transfer (from Collection) to User when SBT is true.
+        if (_userAddress == address(0)) {
+            return;
+        }
+
+        vm.prank(manager);
+        collection.setCollectionIsSBT(true);
+
+        uint256 mintedTokenId = _mintATokenByManager();
+
+        vm.prank(manager);
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _userAddress
+        );
+
+        address aNewUserAddress = address(0xBB);
+        vm.prank(_userAddress);
+        vm.expectRevert("SBTCollection: only allow first mint.");
+        collection.transferFrom(_userAddress, aNewUserAddress, mintedTokenId);
+    }
 }
