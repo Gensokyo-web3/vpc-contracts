@@ -18,10 +18,10 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
     string public metadata;
     string public baseURIForMetadata;
 
-    // event CollectionMetadataUpdated(string _metadata);
+    event CollectionMetadataUpdated(string _metadata);
     event TokenMeatadataUpdated(uint256 indexed _tokenId, string _metadata);
     event TransferToUserFromCollection(uint256 indexed _tokenId, address _user);
-    // event CollectionIsSBTStatusUpdated(bool _isSBT);
+    event CollectionIsSBTStatusUpdated(bool _isSBT);
 
     event Minted(uint256 indexed _tokenId, string _metadata);
     event Burned(uint256 indexed _tokenId);
@@ -123,7 +123,7 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
         onlyOwner
     {
         metadata = _collectionMetadata;
-        // emit CollectionMetadataUpdated(_collectionMetadata);
+        emit CollectionMetadataUpdated(_collectionMetadata);
     }
 
     // SET Base URI for token  metadata: for the full metadata URL
@@ -137,7 +137,7 @@ contract Collection is ERC721URIStorage, Ownable, SBT {
     // SET SBT status for COLLECTION
     function setCollectionIsSBT(bool _SBTStatus) public onlyOwner {
         isSBT = _SBTStatus;
-        // emit CollectionIsSBTStatusUpdated(isSBT);
+        emit CollectionIsSBTStatusUpdated(isSBT);
     }
 
     // SET SBT status for Token ()

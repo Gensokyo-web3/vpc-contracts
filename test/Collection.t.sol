@@ -14,15 +14,27 @@ contract CollectionTest is Test {
 
     address public manager = address(0xaa);
 
+    event CollectionMetadataUpdated(string _metadata);
+    event TokenMeatadataUpdated(uint256 indexed _tokenId, string _metadata);
+    event TransferToUserFromCollection(uint256 indexed _tokenId, address _user);
+    event CollectionIsSBTStatusUpdated(bool _isSBT);
+
+    event Minted(uint256 indexed _tokenId, string _metadata);
+    event Burned(uint256 indexed _tokenId);
+
     function setUp() public {
         collection = new Collection(collectionName, collectionSymbol, manager);
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated("ipfs://defaultCollectionMetadata");
         collection.setCollectionMetadata("ipfs://defaultCollectionMetadata");
     }
 
     function testOwnerPermissions() public {
         string memory newCollectionMetadata = "ipfs://newCollectionMetadata";
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated(newCollectionMetadata);
         collection.setCollectionMetadata(newCollectionMetadata);
         assertEq(bytes(newCollectionMetadata), bytes(collection.metadata()));
     }
@@ -44,6 +56,8 @@ contract CollectionTest is Test {
     function testMintTokenByManagerNullMeta() public {
         // set collection metadata as NULL (not correct) & Mint by manager.
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated("");
         collection.setCollectionMetadata("");
         assertEq(bytes(""), bytes(collection.metadata()));
 
@@ -55,6 +69,8 @@ contract CollectionTest is Test {
     function testMintNullTokenByManager() public {
         // set collection metadata correct & Mint a NULL token by manager.
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated(correctMetadata);
         collection.setCollectionMetadata(correctMetadata);
 
         vm.prank(manager);
@@ -64,6 +80,8 @@ contract CollectionTest is Test {
 
     function testMintNewToken() public {
         // set collection metadata correct & Mint a new token by manager.
+        vm.expectEmit(true, true, true, true);
+        emit Minted(0, correctMetadata);
         vm.prank(manager);
         uint256 mintedTokenId = collection.mint(correctMetadata);
         assertEq(mintedTokenId, 0);
@@ -76,6 +94,7 @@ contract CollectionTest is Test {
 
     function _mintATokenByManager() internal returns (uint256) {
         vm.prank(manager);
+
         uint256 mintedTokenId = collection.mint("hello");
         uint256 currentTokenId = collection.totalSupply();
         assertEq(mintedTokenId, currentTokenId - 1);
@@ -95,7 +114,12 @@ contract CollectionTest is Test {
         // Try to burn token by Manager
         uint256 mintedTokenId = _mintATokenByManager();
         assertEq(mintedTokenId, 0);
+
+        vm.expectEmit(true, true, true, true);
+        emit Burned(mintedTokenId);
+
         vm.prank(manager);
+
         collection.burn(mintedTokenId);
         // Try to get burned Token.
         vm.expectRevert("ERC721: invalid token ID");
@@ -178,6 +202,8 @@ contract CollectionTest is Test {
 
         // by manager.
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit TransferToUserFromCollection(mintedTokenId, _targetUser);
         collection.transferTokenFromCollectionToUserAddress(
             mintedTokenId,
             _targetUser
