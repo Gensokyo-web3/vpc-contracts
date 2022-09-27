@@ -185,9 +185,13 @@ contract CollectionTest is Test {
     function testTransferTokenFromCollectionToUserAddress(address _targetUser)
         public
     {
-        if (_targetUser == address(0)) {
-            return;
-        }
+        // if (_targetUser == address(0) || _targetUser == address(collection)) {
+        //     return;
+        // }
+
+        vm.assume(
+            _targetUser != address(0) || _targetUser != address(collection)
+        );
 
         uint256 mintedTokenId = _mintATokenByManager();
         uint256 nonExistentTokenId = 20000;
