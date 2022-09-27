@@ -234,7 +234,7 @@ contract CollectionTest is Test {
     function testMintAndTransferOutFromCollectionWhenGlobalSBTStateIsEnabled(
         address _userAddress
     ) public {
-        // mint & transfer (from Collection) to User when SBT is true.
+        // mint & transfer (from Collection) to User when Global SBT is true.
         if (_userAddress == address(0)) {
             return;
         }
