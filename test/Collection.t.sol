@@ -294,7 +294,76 @@ contract CollectionTest is Test {
         collection.transferFrom(_targetUser, aNewTarget, mintedTokenId);
     }
 
-    function testMintAndTransferOutFromCollectionWhenSingelTokenIsSBT() public {
-        // mint
+    function testMintAndTransferOutFromCollectionWhenSingelTokenIsSBT(
+        address _targetUser
+    ) public {
+        if (_targetUser == address(0) || _targetUser == address(collection))
+            return;
+
+        uint256 mintedTokenIdA = _mintAndTransferOurFromCollectionToken(
+            _targetUser
+        );
+
+        uint256 mintedTokenIdB = _mintAndTransferOurFromCollectionToken(
+            _targetUser
+        );
+
+        vm.prank(manager);
+        collection.setTokenIsSBT(true, mintedTokenIdA); // A is SBT, owner is _targetUser
+        assertTrue(collection.locked(mintedTokenIdA));
+
+        vm.prank(manager);
+        collection.setTokenIsSBT(false, mintedTokenIdB); // B not SBT, owner is _targetUser
+        assertFalse(collection.locked(mintedTokenIdB));
+
+        address newTokenOwner = address(0xbb);
+        vm.prank(_targetUser);
+        vm.expectRevert("SBTCollection: SBT cannot transfer.");
+        collection.transferFrom(_targetUser, newTokenOwner, mintedTokenIdA);
+        assertEq(collection.ownerOf(mintedTokenIdA), _targetUser);
+
+        vm.prank(_targetUser);
+        collection.transferFrom(_targetUser, newTokenOwner, mintedTokenIdB);
+        assertEq(collection.ownerOf(mintedTokenIdB), newTokenOwner);
+
+        // set collection's isSBT = true (, and transfer B token.)
+        vm.prank(manager);
+        collection.setCollectionIsSBT(true);
+        assertEq(collection.isSBT(), true);
+
+        // When isSBT is true, all token "locked" status will be true.
+        assertEq(collection.locked(mintedTokenIdA), true);
+        assertEq(collection.locked(mintedTokenIdB), true);
+
+        // as the newTokenOwner try to transfer token B backto _targetUser.(in isSBT = true mode)
+        vm.prank(newTokenOwner);
+        vm.expectRevert("SBTCollection: only allow first mint.");
+        collection.transferFrom(newTokenOwner, _targetUser, mintedTokenIdB);
+
+        // as _targetUser try to transfer token A to newTokenOwner (in isSBT = true mode)
+        vm.prank(_targetUser);
+        vm.expectRevert("SBTCollection: only allow first mint.");
+        collection.transferFrom(_targetUser, newTokenOwner, mintedTokenIdA);
+
+        // set collection's isSBT = false (, and transfer token.)
+        vm.prank(manager);
+        collection.setCollectionIsSBT(false);
+        assertEq(collection.isSBT(), false);
+
+        // When isSBT is true, just locked (by handle) token will be true, in (not locked) default is false.
+        assertEq(collection.locked(mintedTokenIdA), true);
+        assertEq(collection.locked(mintedTokenIdB), false);
+        assertEq(collection.ownerOf(mintedTokenIdA), _targetUser);
+        assertEq(collection.ownerOf(mintedTokenIdB), newTokenOwner);
+
+        // try to transfer (by user) after isSBT false->true->false;
+        vm.prank(newTokenOwner);
+        collection.transferFrom(newTokenOwner, _targetUser, mintedTokenIdB);
+        assertEq(collection.ownerOf(mintedTokenIdB), _targetUser);
+
+        // token B locked() == true, so token B unable transfer
+        vm.prank(_targetUser);
+        vm.expectRevert("SBTCollection: SBT cannot transfer.");
+        collection.transferFrom(_targetUser, newTokenOwner, mintedTokenIdA);
     }
 }
