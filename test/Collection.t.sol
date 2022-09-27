@@ -366,4 +366,65 @@ contract CollectionTest is Test {
         vm.expectRevert("SBTCollection: SBT cannot transfer.");
         collection.transferFrom(_targetUser, newTokenOwner, mintedTokenIdA);
     }
+
+    function testSetMetadataForCollection(
+        string memory _metadata,
+        address _illegalUser
+    ) public {
+        // already tested in testOwnerPermissions();
+        vm.assume(_illegalUser != address(manager));
+        // set metadata by illegalUser
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.setCollectionMetadata(_metadata);
+        // set metadata by manager
+        vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated(_metadata);
+        collection.setCollectionMetadata(_metadata);
+        assertEq(collection.metadata(), _metadata);
+    }
+
+    function testSetMetadataForToken(
+        string memory _metadataA,
+        string memory _metadataB,
+        address _illegalUser
+    ) public {
+        vm.assume(_illegalUser != address(manager));
+
+        uint256 mintedTokenIdA = _mintATokenByManager();
+        uint256 mintedTokenIdB = _mintATokenByManager();
+        assertEq(collection.tokenURI(mintedTokenIdA), "hello");
+        assertEq(collection.tokenURI(mintedTokenIdB), "hello");
+
+        vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMeatadataUpdated(mintedTokenIdA, _metadataA);
+        collection.setTokenMetadata(mintedTokenIdA, _metadataA);
+        assertEq(collection.tokenURI(mintedTokenIdA), _metadataA);
+
+        vm.prank(_illegalUser);
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.setTokenMetadata(mintedTokenIdB, _metadataB);
+        assertEq(collection.tokenURI(mintedTokenIdB), "hello");
+    }
+
+    function testSetCollectionBaseURI(
+        string memory _baseURI,
+        address _illegalUser
+    ) public {
+        vm.assume(_illegalUser != address(manager));
+
+        vm.prank(_illegalUser);
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.setCollectionBaseURI(_baseURI);
+
+        vm.prank(manager);
+        collection.setCollectionBaseURI(_baseURI);
+
+        uint256 mintedTokenId = _mintATokenByManager();
+        assertEq(
+            collection.tokenURI(mintedTokenId),
+            string(abi.encodePacked(_baseURI, "hello"))
+        );
+    }
 }
