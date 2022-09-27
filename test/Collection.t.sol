@@ -22,6 +22,13 @@ contract CollectionTest is Test {
     event Minted(uint256 indexed _tokenId, string _metadata);
     event Burned(uint256 indexed _tokenId);
 
+    // ERC721 Events
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenId
+    );
+
     function setUp() public {
         collection = new Collection(collectionName, collectionSymbol, manager);
         vm.prank(manager);
@@ -232,10 +239,10 @@ contract CollectionTest is Test {
     }
 
     function testMintAndTransferOutFromCollectionWhenGlobalSBTStateIsEnabled(
-        address _userAddress
+        address _targetUser
     ) public {
         // mint & transfer (from Collection) to User when Global SBT is true.
-        if (_userAddress == address(0)) {
+        if (_targetUser == address(0)) {
             return;
         }
 
@@ -245,14 +252,47 @@ contract CollectionTest is Test {
         uint256 mintedTokenId = _mintATokenByManager();
 
         vm.prank(manager);
+        vm.expectEmit(true, true, true, true);
+        emit Transfer(address(collection), _targetUser, mintedTokenId);
         collection.transferTokenFromCollectionToUserAddress(
             mintedTokenId,
-            _userAddress
+            _targetUser
+        );
+    }
+
+    function _mintAndTransferOurFromCollectionToken(address _targetUser)
+        internal
+        returns (uint256)
+    {
+        uint256 mintedTokenId = _mintATokenByManager();
+        vm.prank(manager);
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _targetUser
+        );
+        return mintedTokenId;
+    }
+
+    function testAfterFransferOurFromCollectionTryToTransferByUserWhenSBTIsEnabled(
+        address _targetUser
+    ) public {
+        if (_targetUser == address(0) && _targetUser == address(collection))
+            return;
+
+        vm.prank(manager);
+        collection.setCollectionIsSBT(true);
+
+        address aNewTarget = address(0xbb);
+        uint256 mintedTokenId = _mintAndTransferOurFromCollectionToken(
+            _targetUser
         );
 
-        address aNewUserAddress = address(0xBB);
-        vm.prank(_userAddress);
+        vm.prank(_targetUser);
         vm.expectRevert("SBTCollection: only allow first mint.");
-        collection.transferFrom(_userAddress, aNewUserAddress, mintedTokenId);
+        collection.transferFrom(_targetUser, aNewTarget, mintedTokenId);
+    }
+
+    function testMintAndTransferOutFromCollectionWhenSingelTokenIsSBT() public {
+        // mint
     }
 }
