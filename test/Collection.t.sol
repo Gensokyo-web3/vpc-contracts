@@ -189,9 +189,8 @@ contract CollectionTest is Test {
         //     return;
         // }
 
-        vm.assume(
-            _targetUser != address(0) || _targetUser != address(collection)
-        );
+        vm.assume(_targetUser != address(0));
+        vm.assume(_targetUser != address(collection));
 
         uint256 mintedTokenId = _mintATokenByManager();
         uint256 nonExistentTokenId = 20000;
@@ -246,9 +245,8 @@ contract CollectionTest is Test {
         address _targetUser
     ) public {
         // mint & transfer (from Collection) to User when Global SBT is true.
-        if (_targetUser == address(0)) {
-            return;
-        }
+        vm.assume(_targetUser != address(0));
+        vm.assume(_targetUser != address(collection));
 
         vm.prank(manager);
         collection.setCollectionIsSBT(true);
