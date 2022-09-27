@@ -276,7 +276,7 @@ contract CollectionTest is Test {
     function testAfterFransferOurFromCollectionTryToTransferByUserWhenSBTIsEnabled(
         address _targetUser
     ) public {
-        if (_targetUser == address(0) && _targetUser == address(collection))
+        if (_targetUser == address(0) || _targetUser == address(collection))
             return;
 
         vm.prank(manager);
