@@ -150,4 +150,47 @@ contract CollectionTest is Test {
         collection.setCollectionIsAllowUserToBurnHisOwnToken(_allowBurnStatus);
         assertEq(collection.isAllowUserBurnToken(), _allowBurnStatus);
     }
+
+    function testTransferTokenFromCollectionToUserAddress(address _targetUser)
+        public
+    {
+        if (_targetUser == address(0)) {
+            return;
+        }
+
+        uint256 mintedTokenId = _mintATokenByManager();
+        uint256 nonExistentTokenId = 20000;
+
+        // not exist token Id
+        vm.prank(manager);
+        vm.expectRevert("ERC721: invalid token ID");
+        collection.transferTokenFromCollectionToUserAddress(
+            nonExistentTokenId,
+            _targetUser
+        );
+
+        // by illegal user
+        vm.expectRevert("Ownable: caller is not the owner");
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _targetUser
+        );
+
+        // by manager.
+        vm.prank(manager);
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _targetUser
+        );
+        address mintedTokenOwner = collection.ownerOf(mintedTokenId);
+        assertEq(mintedTokenOwner, _targetUser);
+
+        // Test the transferred token Id
+        vm.prank(manager);
+        vm.expectRevert("ERC721: transfer from incorrect owner");
+        collection.transferTokenFromCollectionToUserAddress(
+            mintedTokenId,
+            _targetUser
+        );
+    }
 }
