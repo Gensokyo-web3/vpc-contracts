@@ -37,6 +37,47 @@ contract CollectionTest is Test {
         collection.setCollectionMetadata("ipfs://defaultCollectionMetadata");
     }
 
+    function testOwnerPermissions(
+        address _userA,
+        address _userB,
+        string memory _metadataA,
+        string memory _metadataB
+    ) public {
+        vm.assume(_userA != _userB);
+        vm.assume(_userA != address(0));
+        vm.assume(_userB != address(0));
+
+        Collection collectionA = new Collection(
+            collectionName,
+            collectionSymbol,
+            _userA
+        );
+
+        Collection collectionB = new Collection(
+            collectionName,
+            collectionSymbol,
+            _userB
+        );
+
+        vm.prank(_userA);
+        vm.expectRevert("Ownable: caller is not the owner");
+        collectionB.setCollectionMetadata(_metadataB);
+
+        vm.prank(_userA);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated(_metadataA);
+        collectionA.setCollectionMetadata(_metadataA);
+
+        vm.prank(_userB);
+        vm.expectRevert("Ownable: caller is not the owner");
+        collectionA.setCollectionMetadata(_metadataA);
+
+        vm.prank(_userB);
+        vm.expectEmit(true, true, true, true);
+        emit CollectionMetadataUpdated(_metadataB);
+        collectionB.setCollectionMetadata(_metadataB);
+    }
+
     function testOwnerPermissions() public {
         string memory newCollectionMetadata = "ipfs://newCollectionMetadata";
         vm.prank(manager);
